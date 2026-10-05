@@ -1,38 +1,19 @@
-# 🏐 Volley Planner
+# 🏐 Volley Planner V3
 
-Web xếp đội hình và theo dõi 6 vòng xoay bóng chuyền.
+Web xếp đội hình bóng chuyền, chạy trực tiếp trên GitHub Pages.
 
-## Chạy miễn phí bằng GitHub Pages
+### V3
+- Chỉnh sửa cầu thủ: tên, số áo, vị trí, ảnh.
+- Xóa cầu thủ.
+- Nút đổi Rotation nằm ngay phía trên sân.
+- Có thể đổi Rotation bằng nút ngay trong khu vực sân.
+- Presentation có nút ← / → / Auto / Thoát.
+- Team Setup: Trận đấu → Giải đấu.
+- Sân một bên, phong cách premium/sports.
+- Trên sân hiển thị tên đầy đủ, không hiện số áo hay chữ viết tắt.
+- 6 vòng xoay theo logic 2 → 1 → 6 → 5 → 4 → 3 → 2.
+- Lưu dữ liệu bằng LocalStorage, không cần Supabase.
 
-1. Tạo một repository mới trên GitHub, ví dụ `volley-planner`.
-2. Upload **3 file**:
-   - `index.html`
-   - `style.css`
-   - `app.js`
-3. Vào **Settings → Pages**.
-4. Ở **Build and deployment**, chọn:
-   - Source: `Deploy from a branch`
-   - Branch: `main`
-   - Folder: `/ (root)`
-5. Bấm Save.
-6. Sau vài phút, GitHub sẽ cấp URL dạng:
-   `https://TEN-GITHUB-CUA-BAN.github.io/volley-planner/`
-
-Không cần Node.js, npm hoặc server.
-
-## Tính năng V1
-
-- Đội hình 6 cầu thủ.
-- Thêm cầu thủ, số áo, vị trí và ảnh.
-- Kéo thả cầu thủ vào 6 vị trí ở Rotation 1.
-- Tự động tạo Rotation 1 → 6.
-- Nút xoay trước / xoay tiếp.
-- Auto Rotation.
-- Bảng tổng hợp toàn bộ 6 vòng.
-- Chế độ trình chiếu fullscreen.
-- Lưu đội hình bằng LocalStorage.
-- Responsive cho máy tính và điện thoại.
-
-## Lưu ý
-
-Bản V1 lưu dữ liệu trên chính trình duyệt đang sử dụng. Nếu mở trên máy khác, dữ liệu chưa tự đồng bộ. Có thể nâng cấp Supabase ở V2.
+### GitHub Pages
+Upload/replace 4 file: `index.html`, `style.css`, `app.js`, `README.md`.
+Settings → Pages → Deploy from a branch → `main` → `/ (root)`.

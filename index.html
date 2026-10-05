@@ -1,173 +1,31 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#07111f">
-  <title>Volley Planner — Xếp đội hình bóng chuyền</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#07111f"><title>Volley Planner V3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-ball">🏐</div>
-        <div>
-          <div class="brand-name">VOLLEY <span>PLANNER</span></div>
-          <div class="brand-sub">Rotation & Team Builder</div>
-        </div>
-      </div>
-      <div class="top-actions">
-        <button class="ghost-btn" id="resetBtn">↺ Đặt lại</button>
-        <button class="primary-btn" id="saveBtn">✓ Lưu đội hình</button>
-      </div>
-    </header>
-
-    <main class="main">
-      <section class="hero">
-        <div>
-          <div class="eyebrow">VOLLEYBALL ROTATION TOOL</div>
-          <h1>Xếp đội hình.<br><span>Xoay đúng nhịp.</span></h1>
-          <p>Tạo đội hình xuất phát và theo dõi toàn bộ 6 vòng xoay trên một bảng chiến thuật trực quan.</p>
-        </div>
-        <div class="hero-badge">
-          <span class="pulse"></span>
-          LIVE ROTATION
-        </div>
-      </section>
-
-      <section class="control-grid">
-        <div class="panel team-panel">
-          <div class="panel-title">
-            <div>
-              <span class="section-kicker">TEAM SETUP</span>
-              <h2>Thông tin đội</h2>
-            </div>
-          </div>
-          <div class="form-grid">
-            <label> Tên đội
-              <input id="teamName" value="24H Volleyball" placeholder="Tên đội">
-            </label>
-            <label> Trận đấu
-              <input id="matchName" value="Friendly Match" placeholder="Tên trận">
-            </label>
-          </div>
-          <div class="stats-row">
-            <div><strong id="playerCount">6</strong><span>Cầu thủ</span></div>
-            <div><strong>6</strong><span>Vòng xoay</span></div>
-            <div><strong id="currentLabel">R1</strong><span>Hiện tại</span></div>
-          </div>
-        </div>
-
-        <div class="panel rotation-panel">
-          <div class="panel-title">
-            <div>
-              <span class="section-kicker">ROTATION</span>
-              <h2>Điều khiển vòng xoay</h2>
-            </div>
-            <div class="rotation-counter"><span id="rotationNumber">1</span><small>/ 6</small></div>
-          </div>
-          <div class="rotation-dots" id="rotationDots"></div>
-          <div class="rotation-actions">
-            <button class="circle-btn" id="prevBtn" aria-label="Vòng trước">←</button>
-            <button class="next-btn" id="nextBtn">Xoay tiếp <span>→</span></button>
-            <button class="circle-btn" id="autoBtn" aria-label="Tự động xoay">▶</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="workspace">
-        <div class="court-card">
-          <div class="court-header">
-            <div>
-              <span class="section-kicker">TACTICAL BOARD</span>
-              <h2 id="courtTitle">Rotation 1</h2>
-            </div>
-            <div class="serve-label"><span>●</span> Vị trí phát bóng: <b>1</b></div>
-          </div>
-
-          <div class="court-wrap">
-            <div class="court">
-              <div class="net"><span>NET</span></div>
-              <div class="attack-line front-line"></div>
-              <div class="attack-line back-line"></div>
-              <div class="position p4" data-pos="4"></div>
-              <div class="position p3" data-pos="3"></div>
-              <div class="position p2" data-pos="2"></div>
-              <div class="position p5" data-pos="5"></div>
-              <div class="position p6" data-pos="6"></div>
-              <div class="position p1" data-pos="1"></div>
-              <div class="serve-zone"><span>SERVER</span></div>
-            </div>
-          </div>
-
-          <div class="rotation-note" id="rotationNote">
-            <span>↻</span>
-            <div><b>Rotation 1</b><small>Đội hình xuất phát. Vị trí 1 là người phát bóng.</small></div>
-          </div>
-        </div>
-
-        <aside class="players-card">
-          <div class="players-head">
-            <div>
-              <span class="section-kicker">ROSTER</span>
-              <h2>Cầu thủ</h2>
-            </div>
-            <button class="icon-btn" id="addBtn">＋</button>
-          </div>
-          <div class="player-list" id="playerList"></div>
-          <div class="drag-hint">↕ Kéo thả cầu thủ vào sân để đổi vị trí ở R1</div>
-        </aside>
-      </section>
-
-      <section class="history-panel panel">
-        <div class="panel-title">
-          <div>
-            <span class="section-kicker">ROTATION MAP</span>
-            <h2>Toàn bộ vòng xoay</h2>
-          </div>
-          <button class="text-btn" id="fullscreenBtn">⛶ Trình chiếu</button>
-        </div>
-        <div class="rotation-map" id="rotationMap"></div>
-      </section>
-    </main>
-
-    <footer>
-      <span>VOLLEY PLANNER</span>
-      <span>•</span>
-      <span>Rotation: 2 → 1 → 6 → 5 → 4 → 3 → 2</span>
-    </footer>
-  </div>
-
-  <div class="modal hidden" id="playerModal">
-    <div class="modal-box">
-      <button class="modal-close" id="closeModal">×</button>
-      <span class="section-kicker">NEW PLAYER</span>
-      <h2>Thêm cầu thủ</h2>
-      <form id="playerForm">
-        <label>Tên cầu thủ<input id="pName" required placeholder="Ví dụ: Cương"></label>
-        <div class="form-grid">
-          <label>Số áo<input id="pNumber" required type="number" min="0" max="99" placeholder="10"></label>
-          <label>Vị trí
-            <select id="pRole">
-              <option>Setter</option>
-              <option>Outside Hitter</option>
-              <option>Middle Blocker</option>
-              <option>Opposite</option>
-              <option>Libero</option>
-            </select>
-          </label>
-        </div>
-        <label>Ảnh đại diện<input id="pPhoto" type="file" accept="image/*"></label>
-        <button class="primary-btn full" type="submit">Thêm cầu thủ</button>
-      </form>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">Đã lưu đội hình</div>
-  <script src="app.js"></script>
-</body>
-</html>
+<div class="app-shell">
+<header class="topbar"><div class="brand"><div class="brand-ball">🏐</div><div><div class="brand-name">VOLLEY <span>PLANNER</span></div><div class="brand-sub">Rotation & Team Builder</div></div></div><div class="top-actions"><button class="ghost-btn" id="resetBtn">↺ Đặt lại</button><button class="primary-btn" id="saveBtn">✓ Lưu đội hình</button></div></header>
+<main class="main">
+<section class="hero"><div><div class="eyebrow">VOLLEYBALL ROTATION TOOL · V3</div><h1>Xếp đội hình.<br><span>Xoay đúng nhịp.</span></h1><p>Tạo đội hình xuất phát và theo dõi toàn bộ 6 vòng xoay trên một bảng chiến thuật trực quan.</p></div><div class="hero-badge"><span class="pulse"></span> LIVE ROTATION</div></section>
+<section class="control-grid">
+<div class="panel team-panel"><div class="panel-title"><div><span class="section-kicker">TEAM SETUP</span><h2>Thông tin đội</h2></div></div><div class="form-grid"><label>Tên đội<input id="teamName" value="24H Volleyball" placeholder="Tên đội"></label><label>Giải đấu<input id="matchName" value="Friendly Match" placeholder="Tên giải đấu"></label></div><div class="stats-row"><div><strong id="playerCount">6</strong><span>Cầu thủ</span></div><div><strong>6</strong><span>Vòng xoay</span></div><div><strong id="currentLabel">R1</strong><span>Hiện tại</span></div></div></div>
+<div class="panel rotation-panel"><div class="panel-title"><div><span class="section-kicker">ROTATION</span><h2>Điều khiển vòng xoay</h2></div><div class="rotation-counter"><span id="rotationNumber">1</span><small>/ 6</small></div></div><div class="rotation-dots" id="rotationDots"></div><div class="rotation-actions"><button class="circle-btn" id="prevBtn">←</button><button class="next-btn" id="nextBtn">Rotation tiếp <span>→</span></button><button class="circle-btn" id="autoBtn">▶</button></div></div>
+</section>
+<section class="workspace">
+<div class="court-card"><div class="court-header"><div><span class="section-kicker">TACTICAL BOARD</span><h2 id="courtTitle">Rotation 1</h2></div><div class="serve-label"><span>●</span> Vị trí phát bóng: <b>1</b></div></div>
+<div class="inline-rotation"><button class="circle-btn" id="courtPrevBtn">←</button><div class="inline-center"><strong id="inlineRotationLabel">ROTATION 1</strong><div id="inlineRotationDots"></div></div><button class="next-btn" id="courtNextBtn">Rotation tiếp →</button></div>
+<div class="court-wrap"><div class="court"><div class="opponent-zone">ĐỐI THỦ</div><div class="net"><span>NET</span></div><div class="attack-line front-line"></div><div class="position p4" data-pos="4"></div><div class="position p3" data-pos="3"></div><div class="position p2" data-pos="2"></div><div class="position p5" data-pos="5"></div><div class="position p6" data-pos="6"></div><div class="position p1" data-pos="1"></div><div class="serve-zone">SERVER</div></div></div>
+<div class="rotation-note" id="rotationNote"><span>↻</span><div><b>Rotation 1</b><small>Đội hình xuất phát. Vị trí 1 là người phát bóng.</small></div></div></div>
+<aside class="players-card"><div class="players-head"><div><span class="section-kicker">ROSTER</span><h2>Cầu thủ</h2></div><button class="icon-btn" id="addBtn">＋</button></div><div class="player-list" id="playerList"></div><div class="drag-hint">↕ Kéo thả cầu thủ vào sân để đổi vị trí ở R1</div></aside>
+</section>
+<section class="history-panel panel"><div class="panel-title"><div><span class="section-kicker">ROTATION MAP</span><h2>Toàn bộ vòng xoay</h2></div><button class="text-btn" id="fullscreenBtn">⛶ Trình chiếu</button></div><div class="rotation-map" id="rotationMap"></div></section>
+</main><footer><span>VOLLEY PLANNER V3</span><span>•</span><span>Rotation: 2 → 1 → 6 → 5 → 4 → 3 → 2</span></footer></div>
+<div class="presentation-controls" id="presentationControls"><button id="presPrev">←</button><div><b id="presLabel">ROTATION 1</b><span> · </span><span id="presTournament"></span></div><button id="presNext">→</button><button id="presAuto">▶</button><button id="presClose">✕ Thoát</button></div>
+<div class="modal hidden" id="playerModal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><span class="section-kicker" id="modalKicker">NEW PLAYER</span><h2 id="modalTitle">Thêm cầu thủ</h2><form id="playerForm"><label>Tên cầu thủ<input id="pName" required placeholder="Ví dụ: Nguyễn Tuấn Cương"></label><div class="form-grid"><label>Số áo<input id="pNumber" required type="number" min="0" max="99" placeholder="10"></label><label>Vị trí<select id="pRole"><option>Setter</option><option>Outside Hitter</option><option>Middle Blocker</option><option>Opposite</option><option>Libero</option></select></label></div><label>Ảnh đại diện<input id="pPhoto" type="file" accept="image/*"></label><small class="modal-help">Ảnh mới sẽ thay ảnh cũ khi bạn chọn file.</small><button class="primary-btn full" id="playerSubmit" type="submit">Thêm cầu thủ</button></form></div></div>
+<div class="toast" id="toast">Đã lưu đội hình</div><script src="app.js"></script>
+</body></html>
