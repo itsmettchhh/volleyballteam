@@ -1,470 +1,468 @@
 
-const KEY = "volleyPlannerV3";
+const STORAGE_KEY = "volleyPlannerMultiV1";
 
-const defaultPlayers = [
-  {id:"p1",name:"Cương",number:10,role:"Setter",photo:""},
-  {id:"p2",name:"Nam",number:7,role:"Outside Hitter",photo:""},
-  {id:"p3",name:"Hùng",number:12,role:"Middle Blocker",photo:""},
-  {id:"p4",name:"Minh",number:9,role:"Opposite",photo:""},
-  {id:"p5",name:"Tuấn",number:3,role:"Outside Hitter",photo:""},
-  {id:"p6",name:"Long",number:15,role:"Middle Blocker",photo:""}
+const DEFAULT_PLAYERS = [
+  { id: "p1", name: "Cương", number: 10, role: "Setter", photo: "" },
+  { id: "p2", name: "Nam", number: 7, role: "Outside Hitter", photo: "" },
+  { id: "p3", name: "Hùng", number: 12, role: "Middle Blocker", photo: "" },
+  { id: "p4", name: "Minh", number: 9, role: "Opposite", photo: "" },
+  { id: "p5", name: "Tuấn", number: 3, role: "Outside Hitter", photo: "" },
+  { id: "p6", name: "Long", number: 15, role: "Middle Blocker", photo: "" }
 ];
 
-let state = load(), rotation = 0, autoTimer = null, editingId = null;
+const COLORS = ["orange", "blue", "teal", "purple", "red", "gold"];
 
-function load() {
-  try {
-    const s = JSON.parse(
-      localStorage.getItem(KEY) || localStorage.getItem("volleyPlannerV1")
-    );
-    if (s?.players?.length) return s;
-  } catch (e) {}
+let lineups = loadData();
+let selectedLineupId = lineups[0]?.id;
+let editingPlayerId = null;
+
+function makeLineup(name, color, players = null) {
   return {
-    teamName: "24H Volleyball",
-    matchName: "Friendly Match",
-    players: structuredClone(defaultPlayers)
+    id: "lineup_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+    name,
+    color,
+    rotation: 0,
+    players: players || DEFAULT_PLAYERS.map((p, i) => ({
+      ...p,
+      id: "p_" + Date.now() + "_" + i,
+      photo: ""
+    }))
   };
 }
 
-function save() {
-  state.teamName = document.getElementById("teamName").value.trim() || "My Team";
-  state.matchName = document.getElementById("matchName").value.trim() || "Tournament";
-  localStorage.setItem(KEY, JSON.stringify(state));
-  showToast("Đã lưu đội hình");
-}
-
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, m => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
-  }[m]));
-}
-
-function initials(n) {
-  return n.trim().split(/\s+/).slice(-2).map(x => x[0]).join("").toUpperCase();
-}
-
-function positionsAt(r) {
-  const a = state.players.slice(0, 6), p = {};
-  a.forEach((x, i) => p[i + 1] = x);
-  for (let i = 0; i < r; i++) {
-    const n = {1:p[2], 2:p[3], 3:p[4], 4:p[5], 5:p[6], 6:p[1]};
-    Object.assign(p, n);
+function loadData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved?.lineups?.length) return saved.lineups;
+  } catch (e) {
+    console.warn("Không thể đọc dữ liệu đã lưu.", e);
   }
-  return p;
-}
 
-function token(p) {
-  if (!p) return '<div class="player-token"><div class="initial">?</div></div>';
-  const media = p.photo
-    ? `<img src="${p.photo}" alt="">`
-    : `<div class="initial">${esc(initials(p.name))}</div>`;
-  return `<div class="player-token"><div>${media}</div></div>
-          <div class="token-name">${esc(p.name)}</div>`;
-}
-
-function renderCourt() {
-  const p = positionsAt(rotation);
-  document.querySelectorAll(".position").forEach(e => {
-    e.innerHTML = token(p[+e.dataset.pos]);
-  });
-  document.getElementById("rotationNumber").textContent = rotation + 1;
-  document.getElementById("currentLabel").textContent = "R" + (rotation + 1);
-  document.getElementById("courtTitle").textContent = "Rotation " + (rotation + 1);
-  document.getElementById("inlineRotationLabel").textContent = "ROTATION " + (rotation + 1);
-  document.getElementById("presLabel").textContent = "ROTATION " + (rotation + 1);
-  document.getElementById("presTournament").textContent = state.matchName || "";
-
-  const notes = [
-    "Đội hình xuất phát. Vị trí 1 là người phát bóng.",
-    "Người ở vị trí 2 xoay về vị trí 1 để phát bóng.",
-    "Tiếp tục xoay theo chiều kim đồng hồ.",
-    "Đội hình đã đi qua nửa vòng.",
-    "Còn 2 bước để hoàn thành một vòng.",
-    "Rotation 6 — chuẩn bị trở lại đội hình ban đầu."
+  return [
+    makeLineup("Đội hình 1", "orange"),
+    makeLineup("Đội hình 2", "blue"),
+    makeLineup("Đội hình 3", "teal")
   ];
-
-  document.getElementById("rotationNote").innerHTML =
-    `<span>↻</span><div><b>Rotation ${rotation + 1}</b>
-    <small>${notes[rotation]}</small></div>`;
-
-  renderDots();
 }
 
-function renderDots() {
-  const d = document.getElementById("rotationDots");
-  d.innerHTML = Array.from({length:6}, (_,i) =>
-    `<div class="rotation-dot ${i === rotation ? "active" : ""}" data-r="${i}"></div>`
-  ).join("");
-
-  d.querySelectorAll(".rotation-dot").forEach(x =>
-    x.onclick = () => setRotation(+x.dataset.r)
-  );
-
-  const q = document.getElementById("inlineRotationDots");
-  q.innerHTML = Array.from({length:6}, (_,i) =>
-    `<span class="${i === rotation ? "active" : ""}" data-r="${i}"></span>`
-  ).join("");
-
-  q.querySelectorAll("span").forEach(x =>
-    x.onclick = () => setRotation(+x.dataset.r)
-  );
+function persistData(showMessage = false) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ lineups }));
+    if (showMessage) toast("Đã lưu dữ liệu đội hình.");
+  } catch (e) {
+    toast("Không thể lưu. Có thể ảnh cầu thủ quá lớn.");
+  }
 }
 
-function renderMap() {
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+function initials(name) {
+  return String(name || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map(word => word[0] || "")
+    .join("")
+    .toUpperCase();
+}
+
+function getSelectedLineup() {
+  return lineups.find(lineup => lineup.id === selectedLineupId) || lineups[0];
+}
+
+function positionsAt(lineup, rotation) {
+  const players = lineup.players.slice(0, 6);
+  const positions = {};
+
+  players.forEach((player, index) => {
+    positions[index + 1] = player;
+  });
+
+  for (let i = 0; i < rotation; i++) {
+    const previous = { ...positions };
+    positions[1] = previous[2];
+    positions[2] = previous[3];
+    positions[3] = previous[4];
+    positions[4] = previous[5];
+    positions[5] = previous[6];
+    positions[6] = previous[1];
+  }
+
+  return positions;
+}
+
+function playerToken(player) {
+  if (!player) {
+    return `
+      <div class="player-token">
+        <div class="initial">?</div>
+      </div>
+      <div class="token-name">Trống</div>
+    `;
+  }
+
+  const avatar = player.photo
+    ? `<img src="${player.photo}" alt="">`
+    : `<div class="initial">${esc(initials(player.name))}</div>`;
+
+  return `
+    <div class="player-token">
+      <div>${avatar}</div>
+    </div>
+    <div class="token-name">${esc(player.name)}</div>
+  `;
+}
+
+function courtMarkup(lineup) {
+  const positions = positionsAt(lineup, lineup.rotation);
+
+  return `
+    <div class="court-wrap">
+      <div class="court">
+        <div class="opponent-zone">ĐỐI THỦ</div>
+        <div class="net"><span>LƯỚI</span></div>
+        <div class="front-line"></div>
+        ${[1, 2, 3, 4, 5, 6].map(position => `
+          <div class="position p${position}" data-pos="${position}">
+            ${playerToken(positions[position])}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderLineups() {
+  const grid = document.getElementById("lineupsGrid");
+  if (!grid) return;
+
+  document.getElementById("lineupCount").textContent =
+    `${lineups.length} ĐỘI HÌNH`;
+
+  grid.innerHTML = lineups.map(lineup => `
+    <article
+      class="lineup-card ${lineup.id === selectedLineupId ? "lineup-selected" : ""}"
+      data-id="${lineup.id}"
+      data-color="${lineup.color}"
+    >
+      <header class="lineup-card-header">
+        <div class="lineup-title-wrap">
+          <span class="lineup-color-dot"></span>
+          <input
+            class="lineup-name"
+            aria-label="Tên đội hình"
+            value="${esc(lineup.name)}"
+            maxlength="40"
+          >
+        </div>
+        <div class="lineup-actions">
+          <button type="button" class="select-lineup" title="Chọn đội hình">✓</button>
+          <button type="button" class="delete-lineup" title="Xóa đội hình">×</button>
+        </div>
+      </header>
+
+      <div class="lineup-subtitle">ROTATION ${lineup.rotation + 1} / 6</div>
+
+      ${courtMarkup(lineup)}
+
+      <div class="lineup-rotation-controls">
+        <button type="button" class="prev-rotation" aria-label="Vòng trước">←</button>
+        <div class="lineup-rotation-label">
+          Vòng ${lineup.rotation + 1} / 6
+        </div>
+        <button type="button" class="next-rotation" aria-label="Vòng tiếp theo">→</button>
+      </div>
+
+      <div class="lineup-roster-summary">
+        <span><strong>${lineup.players.length}</strong> cầu thủ</span>
+        <span>${lineup.id === selectedLineupId ? "Đang chỉnh sửa" : "Nhấn ✓ để chỉnh sửa"}</span>
+      </div>
+    </article>
+  `).join("");
+
+  grid.querySelectorAll(".lineup-card").forEach(card => {
+    const id = card.dataset.id;
+    const lineup = lineups.find(item => item.id === id);
+    if (!lineup) return;
+
+    card.querySelector(".lineup-name").addEventListener("change", event => {
+      lineup.name = event.target.value.trim() || "Đội hình";
+      persistData();
+      renderLineups();
+    });
+
+    card.querySelector(".select-lineup").onclick = () => {
+      selectedLineupId = id;
+      renderAll();
+    };
+
+    card.querySelector(".delete-lineup").onclick = () => {
+      if (lineups.length <= 1) {
+        toast("Cần giữ lại ít nhất một đội hình.");
+        return;
+      }
+
+      if (!confirm(`Bạn muốn xóa "${lineup.name}"?`)) return;
+
+      lineups = lineups.filter(item => item.id !== id);
+
+      if (selectedLineupId === id) {
+        selectedLineupId = lineups[0].id;
+      }
+
+      persistData();
+      renderAll();
+      toast("Đã xóa đội hình.");
+    };
+
+    card.querySelector(".prev-rotation").onclick = () => {
+      lineup.rotation = (lineup.rotation + 5) % 6;
+      persistData();
+      renderLineups();
+    };
+
+    card.querySelector(".next-rotation").onclick = () => {
+      lineup.rotation = (lineup.rotation + 1) % 6;
+      persistData();
+      renderLineups();
+    };
+
+    card.querySelector(".court").addEventListener("click", () => {
+      if (selectedLineupId !== id) {
+        selectedLineupId = id;
+        renderAll();
+      }
+    });
+  });
+}
+
+function renderPlayers() {
+  const lineup = getSelectedLineup();
+  const list = document.getElementById("playerList");
+  if (!lineup || !list) return;
+
+  const addButton = document.getElementById("addBtn");
+  if (addButton) {
+    addButton.textContent = `＋ Thêm cầu thủ — ${lineup.name}`;
+  }
+
+  if (!lineup.players.length) {
+    list.innerHTML = '<p class="helper-text">Chưa có cầu thủ. Hãy thêm cầu thủ vào đội hình này.</p>';
+    return;
+  }
+
+  list.innerHTML = lineup.players.map(player => {
+    const avatar = player.photo
+      ? `<img src="${player.photo}" alt="">`
+      : esc(initials(player.name));
+
+    return `
+      <div class="player-item" data-id="${player.id}">
+        <div class="player-avatar">${avatar}</div>
+        <div class="player-meta">
+          <strong>${esc(player.name)}</strong>
+          <span>${esc(player.role)}</span>
+        </div>
+        <div class="shirt">#${esc(player.number)}</div>
+        <div class="roster-actions">
+          <button type="button" class="edit-player" title="Chỉnh sửa">✎</button>
+          <button type="button" class="delete-player" title="Xóa">×</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".player-item").forEach(item => {
+    const id = item.dataset.id;
+
+    item.querySelector(".edit-player").onclick = () => openEdit(id);
+    item.querySelector(".delete-player").onclick = () => deletePlayer(id);
+  });
+}
+
+function renderRotationMap() {
   const holder = document.getElementById("rotationMap");
+  const lineup = getSelectedLineup();
+  if (!holder || !lineup) return;
+
   holder.innerHTML = "";
 
-  for (let r = 0; r < 6; r++) {
-    const p = positionsAt(r), card = document.createElement("div");
-    card.className = `map-card ${r === rotation ? "active" : ""}`;
+  for (let rotation = 0; rotation < 6; rotation++) {
+    const positions = positionsAt(lineup, rotation);
+    const card = document.createElement("div");
 
-    card.innerHTML = `<h3>ROTATION ${r + 1}</h3>` +
-      Array.from({length:6}, (_,i) => {
-        const x = p[i + 1];
-        return `<div class="map-player"><b>${i + 1}</b>
-          <div class="map-mini">${x ? esc(initials(x.name)) : "?"}</div>
-          <span>${x ? esc(x.name) : "Trống"}</span></div>`;
-      }).join("");
+    card.className = `map-card ${rotation === lineup.rotation ? "active" : ""}`;
+    card.innerHTML = `
+      <h3>VÒNG ${rotation + 1}</h3>
+      ${[1, 2, 3, 4, 5, 6].map(position => {
+        const player = positions[position];
+        return `
+          <div class="map-player">
+            <b>${position}</b>
+            <div class="map-mini">${player ? esc(initials(player.name)) : "?"}</div>
+            <span>${player ? esc(player.name) : "Trống"}</span>
+          </div>
+        `;
+      }).join("")}
+    `;
 
-    card.onclick = () => setRotation(r);
+    card.onclick = () => {
+      lineup.rotation = rotation;
+      persistData();
+      renderAll();
+    };
+
     holder.appendChild(card);
   }
 }
 
-function renderPlayers() {
-  document.getElementById("playerCount").textContent = state.players.length;
-  const list = document.getElementById("playerList");
-
-  list.innerHTML = state.players.map(p => {
-    const av = p.photo
-      ? `<img src="${p.photo}" alt="">`
-      : esc(initials(p.name));
-
-    return `<div class="player-item" draggable="true" data-id="${p.id}">
-      <div class="player-avatar">${av}</div>
-      <div class="player-meta"><strong>${esc(p.name)}</strong>
-      <span>${esc(p.role)}</span></div>
-      <div class="shirt">#${p.number}</div>
-      <div class="roster-actions">
-        <button class="edit-player" title="Chỉnh sửa">✎</button>
-        <button class="delete-player" title="Xóa">×</button>
-      </div></div>`;
-  }).join("");
-
-  document.querySelectorAll(".player-item").forEach(item => {
-    item.ondragstart = e => {
-      e.dataTransfer.setData("text/player-id", item.dataset.id);
-      e.dataTransfer.effectAllowed = "move";
-      item.classList.add("dragging");
-    };
-
-    item.ondragend = () => item.classList.remove("dragging");
-    item.querySelector(".edit-player").onclick = () => openEdit(item.dataset.id);
-    item.querySelector(".delete-player").onclick = () => deletePlayer(item.dataset.id);
-  });
+function renderAll() {
+  renderLineups();
+  renderPlayers();
+  renderRotationMap();
 }
 
-/* KÉO THẢ TRỰC TIẾP TRÊN SÂN */
-function bindDrop() {
-  if (!document.getElementById("court-drag-style")) {
-    const style = document.createElement("style");
-    style.id = "court-drag-style";
-    style.textContent = `
-      .position {
-        cursor: grab;
-        touch-action: none;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-      .position:active { cursor: grabbing; }
-      .position.court-drop-target {
-        outline: 3px dashed #f5c451;
-        outline-offset: 3px;
-      }
-    `;
-    document.head.appendChild(style);
-  }
+function toast(message) {
+  const element = document.getElementById("toast");
+  if (!element) return;
 
-  const zones = [...document.querySelectorAll(".position")];
+  element.textContent = message;
+  element.classList.add("show");
 
-  function swapPositions(fromPos, toPos) {
-    if (fromPos === toPos || fromPos < 1 || fromPos > 6 ||
-        toPos < 1 || toPos > 6) return;
-
-    const current = positionsAt(rotation);
-    const a = current[fromPos], b = current[toPos];
-
-    if (!a || !b || a.id === b.id) return;
-
-    const ia = state.players.findIndex(p => p.id === a.id);
-    const ib = state.players.findIndex(p => p.id === b.id);
-
-    if (ia < 0 || ib < 0) return;
-
-    [state.players[ia], state.players[ib]] =
-      [state.players[ib], state.players[ia]];
-
-    renderAll();
-    showToast(`Đã đổi vị trí ${fromPos} ↔ ${toPos}`);
-  }
-
-  zones.forEach(zone => {
-    zone.draggable = false;
-
-    let startX = 0, startY = 0, sourcePos = 0, moved = false;
-
-    zone.onpointerdown = e => {
-      if (e.button !== 0) return;
-
-      startX = e.clientX;
-      startY = e.clientY;
-      sourcePos = Number(zone.dataset.pos);
-      moved = false;
-
-      try {
-        zone.setPointerCapture(e.pointerId);
-      } catch (_) {}
-    };
-
-    zone.onpointermove = e => {
-      if (!sourcePos) return;
-
-      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 6) {
-        moved = true;
-      }
-
-      zones.forEach(z => z.classList.remove("court-drop-target"));
-      if (!moved) return;
-
-      const target = document.elementFromPoint(e.clientX, e.clientY)
-        ?.closest(".position");
-
-      if (target && Number(target.dataset.pos) !== sourcePos) {
-        target.classList.add("court-drop-target");
-      }
-    };
-
-    zone.onpointerup = e => {
-      const wasMoved = moved;
-      const fromPos = sourcePos;
-
-      const target = document.elementFromPoint(e.clientX, e.clientY)
-        ?.closest(".position");
-
-      const toPos = target ? Number(target.dataset.pos) : 0;
-
-      zones.forEach(z => z.classList.remove("court-drop-target"));
-      sourcePos = 0;
-      moved = false;
-
-      if (wasMoved && toPos >= 1 && toPos <= 6) {
-        swapPositions(fromPos, toPos);
-      }
-    };
-
-    zone.onpointercancel = () => {
-      sourcePos = 0;
-      moved = false;
-      zones.forEach(z => z.classList.remove("court-drop-target"));
-    };
-
-    // Kéo cầu thủ từ danh sách vào vị trí trên sân
-    zone.ondragover = e => {
-      e.preventDefault();
-      zone.classList.add("court-drop-target");
-      e.dataTransfer.dropEffect = "move";
-    };
-
-    zone.ondragleave = () => zone.classList.remove("court-drop-target");
-
-    zone.ondrop = e => {
-      e.preventDefault();
-      zone.classList.remove("court-drop-target");
-
-      const id = e.dataTransfer.getData("text/player-id");
-      const incoming = state.players.find(p => p.id === id);
-      const targetPos = Number(zone.dataset.pos);
-      const current = positionsAt(rotation);
-
-      if (!incoming || !current[targetPos]) return;
-
-      const ia = state.players.findIndex(p => p.id === incoming.id);
-      const ib = state.players.findIndex(p => p.id === current[targetPos].id);
-
-      if (ia < 0 || ib < 0 || ia === ib) return;
-
-      [state.players[ia], state.players[ib]] =
-        [state.players[ib], state.players[ia]];
-
-      renderAll();
-      showToast(`Đã đưa ${incoming.name} vào vị trí ${targetPos}`);
-    };
-  });
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => element.classList.remove("show"), 2200);
 }
 
-function setRotation(r) {
-  rotation = (r + 6) % 6;
-  renderCourt();
-  renderMap();
-}
+function addLineup() {
+  const number = lineups.length + 1;
+  const color = COLORS[(lineups.length) % COLORS.length];
 
-function next() { setRotation(rotation + 1); }
-function prev() { setRotation(rotation - 1); }
+  const lineup = makeLineup(`Đội hình ${number}`, color);
+  lineups.push(lineup);
+  selectedLineupId = lineup.id;
 
-function toggleAuto() {
-  if (autoTimer) {
-    clearInterval(autoTimer);
-    autoTimer = null;
-    document.getElementById("autoBtn").textContent = "▶";
-    document.getElementById("presAuto").textContent = "▶";
-  } else {
-    document.getElementById("autoBtn").textContent = "Ⅱ";
-    document.getElementById("presAuto").textContent = "Ⅱ";
-    autoTimer = setInterval(next, 2300);
-  }
-}
-
-function showToast(m) {
-  const t = document.getElementById("toast");
-  t.textContent = m;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1600);
+  persistData();
+  renderAll();
+  toast("Đã thêm đội hình mới.");
 }
 
 function openAdd() {
-  editingId = null;
-  document.getElementById("modalKicker").textContent = "NEW PLAYER";
+  editingPlayerId = null;
+
   document.getElementById("modalTitle").textContent = "Thêm cầu thủ";
   document.getElementById("playerSubmit").textContent = "Thêm cầu thủ";
   document.getElementById("playerForm").reset();
+  document.getElementById("pNumber").value = 1;
   document.getElementById("playerModal").classList.remove("hidden");
   document.getElementById("pName").focus();
 }
 
 function openEdit(id) {
-  const p = state.players.find(x => x.id === id);
-  if (!p) return;
+  const lineup = getSelectedLineup();
+  const player = lineup?.players.find(item => item.id === id);
+  if (!player) return;
 
-  editingId = id;
-  document.getElementById("modalKicker").textContent = "EDIT PLAYER";
+  editingPlayerId = id;
   document.getElementById("modalTitle").textContent = "Chỉnh sửa cầu thủ";
   document.getElementById("playerSubmit").textContent = "Lưu thay đổi";
-  document.getElementById("pName").value = p.name;
-  document.getElementById("pNumber").value = p.number;
-  document.getElementById("pRole").value = p.role;
+  document.getElementById("pName").value = player.name;
+  document.getElementById("pNumber").value = player.number;
+  document.getElementById("pRole").value = player.role;
   document.getElementById("pPhoto").value = "";
   document.getElementById("playerModal").classList.remove("hidden");
 }
 
 function closeModal() {
   document.getElementById("playerModal").classList.add("hidden");
-  editingId = null;
   document.getElementById("playerForm").reset();
+  editingPlayerId = null;
 }
 
 function deletePlayer(id) {
-  const p = state.players.find(x => x.id === id);
-  if (!p || !confirm(`Xóa ${p.name}?`)) return;
+  const lineup = getSelectedLineup();
+  const player = lineup?.players.find(item => item.id === id);
+  if (!lineup || !player) return;
 
-  state.players = state.players.filter(x => x.id !== id);
+  if (!confirm(`Xóa cầu thủ ${player.name} khỏi "${lineup.name}"?`)) return;
+
+  lineup.players = lineup.players.filter(item => item.id !== id);
+  persistData();
   renderAll();
-  showToast("Đã xóa cầu thủ");
+  toast("Đã xóa cầu thủ.");
 }
 
-function renderAll() {
-  document.getElementById("teamName").value = state.teamName || "";
-  document.getElementById("matchName").value = state.matchName || "";
-  renderPlayers();
-  renderCourt();
-  renderMap();
-  bindDrop();
-}
+document.getElementById("playerForm").onsubmit = event => {
+  event.preventDefault();
 
-document.getElementById("teamName").oninput = e => state.teamName = e.target.value;
-document.getElementById("matchName").oninput = e => state.matchName = e.target.value;
-document.getElementById("saveBtn").onclick = save;
-document.getElementById("nextBtn").onclick = next;
-document.getElementById("prevBtn").onclick = prev;
-document.getElementById("autoBtn").onclick = toggleAuto;
-document.getElementById("courtNextBtn").onclick = next;
-document.getElementById("courtPrevBtn").onclick = prev;
-document.getElementById("addBtn").onclick = openAdd;
-document.getElementById("closeModal").onclick = closeModal;
-
-document.getElementById("playerModal").onclick = e => {
-  if (e.target.id === "playerModal") closeModal();
-};
-
-document.getElementById("resetBtn").onclick = () => {
-  if (confirm("Đặt lại đội hình mẫu?")) {
-    state = {
-      teamName: "24H Volleyball",
-      matchName: "Friendly Match",
-      players: structuredClone(defaultPlayers)
-    };
-    rotation = 0;
-    renderAll();
-    save();
-  }
-};
-
-document.getElementById("playerForm").onsubmit = e => {
-  e.preventDefault();
+  const lineup = getSelectedLineup();
+  if (!lineup) return;
 
   const name = document.getElementById("pName").value.trim();
-  const number = +document.getElementById("pNumber").value;
+  const number = Number(document.getElementById("pNumber").value);
   const role = document.getElementById("pRole").value;
   const file = document.getElementById("pPhoto").files[0];
 
-  const done = (photo = null) => {
-    if (editingId) {
-      const p = state.players.find(x => x.id === editingId);
-      if (!p) return;
+  const finish = photo => {
+    if (editingPlayerId) {
+      const player = lineup.players.find(item => item.id === editingPlayerId);
+      if (!player) return;
 
-      p.name = name;
-      p.number = number;
-      p.role = role;
-      if (photo !== null) p.photo = photo;
-      showToast("Đã cập nhật cầu thủ");
+      player.name = name;
+      player.number = number;
+      player.role = role;
+      if (photo !== null) player.photo = photo;
+
+      toast("Đã cập nhật cầu thủ.");
     } else {
-      state.players.push({
-        id: "p" + Date.now(),
-        name, number, role, photo: photo || ""
+      lineup.players.push({
+        id: "player_" + Date.now(),
+        name,
+        number,
+        role,
+        photo: photo || ""
       });
-      showToast("Đã thêm cầu thủ");
+
+      toast("Đã thêm cầu thủ.");
     }
 
     closeModal();
+    persistData();
     renderAll();
   };
 
   if (file) {
-    const r = new FileReader();
-    r.onload = () => done(r.result);
-    r.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = () => finish(reader.result);
+    reader.onerror = () => toast("Không đọc được ảnh.");
+    reader.readAsDataURL(file);
   } else {
-    done(null);
+    finish(null);
   }
 };
 
-function enterPresentation() {
-  document.body.classList.add("presentation");
-  document.getElementById("fullscreenBtn").textContent = "× Thoát trình chiếu";
-}
+document.getElementById("addLineupBtn").onclick = addLineup;
+document.getElementById("addBtn").onclick = openAdd;
+document.getElementById("saveBtn").onclick = () => persistData(true);
+document.getElementById("closeModal").onclick = closeModal;
 
-function exitPresentation() {
-  document.body.classList.remove("presentation");
-  document.getElementById("fullscreenBtn").textContent = "⛶ Trình chiếu";
-}
+document.getElementById("playerModal").onclick = event => {
+  if (event.target.id === "playerModal") closeModal();
+};
 
-document.getElementById("fullscreenBtn").onclick = () =>
-  document.body.classList.contains("presentation")
-    ? exitPresentation()
-    : enterPresentation();
+document.getElementById("matchName").value =
+  localStorage.getItem("volleyPlannerMatchName") || "Friendly Match";
 
-document.getElementById("presPrev").onclick = prev;
-document.getElementById("presNext").onclick = next;
-document.getElementById("presAuto").onclick = toggleAuto;
-document.getElementById("presClose").onclick = exitPresentation;
+document.getElementById("matchName").addEventListener("change", event => {
+  localStorage.setItem("volleyPlannerMatchName", event.target.value);
+  toast("Đã lưu tên giải đấu.");
+});
 
 renderAll();
