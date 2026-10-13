@@ -17,3 +17,9 @@ Web xếp đội hình bóng chuyền, chạy trực tiếp trên GitHub Pages.
 ### GitHub Pages
 Upload/replace 4 file: `index.html`, `style.css`, `app.js`, `README.md`.
 Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
+
+
+## V3.1 — Kéo thả trực tiếp trên sân
+- Kéo một cầu thủ trên board thả vào vị trí của cầu thủ khác để đổi chỗ.
+- Có thể kéo cầu thủ từ Roster vào một vị trí trên sân.
+- Hoạt động ở cả Rotation 1–6; các thay đổi cập nhật đội hình gốc để các rotation khác đồng bộ.

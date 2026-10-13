@@ -11,8 +11,39 @@ function token(p){if(!p)return '<div class="player-token"><div class="initial">?
 function renderCourt(){const p=positionsAt(rotation);document.querySelectorAll(".position").forEach(e=>e.innerHTML=token(p[+e.dataset.pos]));document.getElementById("rotationNumber").textContent=rotation+1;document.getElementById("currentLabel").textContent="R"+(rotation+1);document.getElementById("courtTitle").textContent="Rotation "+(rotation+1);document.getElementById("inlineRotationLabel").textContent="ROTATION "+(rotation+1);document.getElementById("presLabel").textContent="ROTATION "+(rotation+1);document.getElementById("presTournament").textContent=state.matchName||"";const notes=["Đội hình xuất phát. Vị trí 1 là người phát bóng.","Người ở vị trí 2 xoay về vị trí 1 để phát bóng.","Tiếp tục xoay theo chiều kim đồng hồ.","Đội hình đã đi qua nửa vòng.","Còn 2 bước để hoàn thành một vòng.","Rotation 6 — chuẩn bị trở lại đội hình ban đầu."];document.getElementById("rotationNote").innerHTML=`<span>↻</span><div><b>Rotation ${rotation+1}</b><small>${notes[rotation]}</small></div>`;renderDots()}
 function renderDots(){const d=document.getElementById("rotationDots");d.innerHTML=Array.from({length:6},(_,i)=>`<div class="rotation-dot ${i===rotation?"active":""}" data-r="${i}"></div>`).join("");d.querySelectorAll(".rotation-dot").forEach(x=>x.onclick=()=>setRotation(+x.dataset.r));const q=document.getElementById("inlineRotationDots");q.innerHTML=Array.from({length:6},(_,i)=>`<span class="${i===rotation?"active":""}" data-r="${i}"></span>`).join("");q.querySelectorAll("span").forEach(x=>x.onclick=()=>setRotation(+x.dataset.r))}
 function renderMap(){const holder=document.getElementById("rotationMap");holder.innerHTML="";for(let r=0;r<6;r++){const p=positionsAt(r),card=document.createElement("div");card.className=`map-card ${r===rotation?"active":""}`;card.innerHTML=`<h3>ROTATION ${r+1}</h3>`+Array.from({length:6},(_,i)=>{const x=p[i+1];return `<div class="map-player"><b>${i+1}</b><div class="map-mini">${x?esc(initials(x.name)):"?"}</div><span>${x?esc(x.name):"Trống"}</span></div>`}).join("");card.onclick=()=>setRotation(r);holder.appendChild(card)}}
-function renderPlayers(){document.getElementById("playerCount").textContent=state.players.length;const list=document.getElementById("playerList");list.innerHTML=state.players.map(p=>{const av=p.photo?`<img src="${p.photo}" alt="">`:esc(initials(p.name));return `<div class="player-item" draggable="true" data-id="${p.id}"><div class="player-avatar">${av}</div><div class="player-meta"><strong>${esc(p.name)}</strong><span>${esc(p.role)}</span></div><div class="shirt">#${p.number}</div><div class="roster-actions"><button class="edit-player" title="Chỉnh sửa">✎</button><button class="delete-player" title="Xóa">×</button></div></div>`}).join("");document.querySelectorAll(".player-item").forEach(item=>{item.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/player-id",item.dataset.id);item.classList.add("dragging")});item.addEventListener("dragend",()=>item.classList.remove("dragging"));item.querySelector(".edit-player").onclick=()=>openEdit(item.dataset.id);item.querySelector(".delete-player").onclick=()=>deletePlayer(item.dataset.id)})}
-function bindDrop(){document.querySelectorAll(".position").forEach(z=>{z.addEventListener("dragover",e=>e.preventDefault());z.addEventListener("drop",e=>{e.preventDefault();if(rotation!==0)return showToast("Chỉ chỉnh đội hình xuất phát ở R1");const id=e.dataTransfer.getData("text/player-id"),target=+z.dataset.pos,source=state.players.findIndex(p=>p.id===id);if(source<0||source>=6)return;[state.players[source],state.players[target-1]]=[state.players[target-1],state.players[source]];renderAll()})})}
+function renderPlayers(){document.getElementById("playerCount").textContent=state.players.length;const list=document.getElementById("playerList");list.innerHTML=state.players.map(p=>{const av=p.photo?`<img src="${p.photo}" alt="">`:esc(initials(p.name));return `<div class="player-item" draggable="true" data-id="${p.id}"><div class="player-avatar">${av}</div><div class="player-meta"><strong>${esc(p.name)}</strong><span>${esc(p.role)}</span></div><div class="shirt">#${p.number}</div><div class="roster-actions"><button class="edit-player" title="Chỉnh sửa">✎</button><button class="delete-player" title="Xóa">×</button></div></div>`}).join("");document.querySelectorAll(".player-item").forEach(item=>{item.ondragstart=e=>{e.dataTransfer.setData("text/player-id",item.dataset.id);e.dataTransfer.effectAllowed="move";item.classList.add("dragging")};item.ondragend=()=>item.classList.remove("dragging");item.querySelector(".edit-player").onclick=()=>openEdit(item.dataset.id);item.querySelector(".delete-player").onclick=()=>deletePlayer(item.dataset.id)})}
+function bindDrop(){
+ document.querySelectorAll(".position").forEach(z=>{
+  // Reassign handlers instead of addEventListener so re-rendering doesn't stack listeners.
+  z.draggable=true;
+  z.ondragstart=e=>{e.dataTransfer.setData("text/court-position",String(+z.dataset.pos));e.dataTransfer.effectAllowed="move";z.classList.add("court-dragging")};
+  z.ondragend=()=>z.classList.remove("court-dragging");
+  z.ondragover=e=>{e.preventDefault();z.classList.add("court-drop-target");e.dataTransfer.dropEffect="move"};
+  z.ondragleave=()=>z.classList.remove("court-drop-target");
+  z.ondrop=e=>{
+   e.preventDefault();z.classList.remove("court-drop-target");
+   const targetPos=+z.dataset.pos;
+   const fromPos=Number(e.dataTransfer.getData("text/court-position"));
+   const current=positionsAt(rotation);
+   const swapPlayers=(a,b)=>{
+    if(!a||!b||a.id===b.id)return false;
+    const ia=state.players.findIndex(p=>p.id===a.id),ib=state.players.findIndex(p=>p.id===b.id);
+    if(ia<0||ib<0)return false;
+    [state.players[ia],state.players[ib]]=[state.players[ib],state.players[ia]];
+    return true;
+   };
+   if(fromPos>=1&&fromPos<=6){
+    if(fromPos===targetPos)return;
+    if(swapPlayers(current[fromPos],current[targetPos])){renderAll();showToast(`Đã đổi vị trí ${fromPos} ↔ ${targetPos}`)}
+    return;
+   }
+   const id=e.dataTransfer.getData("text/player-id");
+   const incoming=state.players.find(p=>p.id===id);
+   if(!incoming)return;
+   if(swapPlayers(incoming,current[targetPos])){renderAll();showToast(`Đã đưa ${incoming.name} vào vị trí ${targetPos}`)}
+  };
+ });
+}
 function setRotation(r){rotation=(r+6)%6;renderCourt();renderMap()}
 function next(){setRotation(rotation+1)}function prev(){setRotation(rotation-1)}
 function toggleAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;document.getElementById("autoBtn").textContent="▶";document.getElementById("presAuto").textContent="▶"}else{document.getElementById("autoBtn").textContent="Ⅱ";document.getElementById("presAuto").textContent="Ⅱ";autoTimer=setInterval(next,2300)}}
