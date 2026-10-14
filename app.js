@@ -4,17 +4,17 @@ const STORAGE_KEY = "volleyPlannerMultiV1";
 const ROSTER_UPDATE_KEY = "volleyRosterNamesUpdatedV2";
 
 const DEFAULT_PLAYERS = [
-  { id: "p1", name: "Nguyễn Tuấn Thành Cương", number: 1, role: "Setter", photo: "" },
-  { id: "p2", name: "Đào Minh Tuấn", number: 2, role: "Outside Hitter", photo: "" },
-  { id: "p3", name: "Trần Đức Uy", number: 3, role: "Outside Hitter", photo: "" },
-  { id: "p4", name: "Dũng Thế Bình", number: 4, role: "Middle Blocker", photo: "" },
-  { id: "p5", name: "Ngô Huy Khải", number: 5, role: "Middle Blocker", photo: "" },
-  { id: "p6", name: "Nguyễn Thế Kỷ", number: 6, role: "Opposite", photo: "" },
-  { id: "p7", name: "Dù Tiến Đạt", number: 7, role: "Outside Hitter", photo: "" },
-  { id: "p8", name: "Tô Bọt Huy", number: 8, role: "Libero", photo: "" },
-  { id: "p9", name: "Nguyễn Phú Trọng", number: 9, role: "Outside Hitter", photo: "" },
-  { id: "p10", name: "Nguyễn Đình Cần", number: 10, role: "Setter", photo: "" },
-  { id: "p11", name: "Bùi Phi Sơn", number: 11, role: "Opposite", photo: "" }
+  { id: "p1", name: "Thành Cương", number: 1, role: "Setter", photo: "" },
+  { id: "p2", name: "Minh Tuấn", number: 2, role: "Outside Hitter", photo: "" },
+  { id: "p3", name: "Đức Uy", number: 3, role: "Outside Hitter", photo: "" },
+  { id: "p4", name: "Thế Bình", number: 4, role: "Middle Blocker", photo: "" },
+  { id: "p5", name: "Huy Khải", number: 5, role: "Middle Blocker", photo: "" },
+  { id: "p6", name: "Thế Kỷ", number: 6, role: "Opposite", photo: "" },
+  { id: "p7", name: "Dù Đạt", number: 7, role: "Outside Hitter", photo: "" },
+  { id: "p8", name: "Tô Huy", number: 8, role: "Libero", photo: "" },
+  { id: "p9", name: "Phú Trọng", number: 9, role: "Outside Hitter", photo: "" },
+  { id: "p10", name: "Đình Cần", number: 10, role: "Setter", photo: "" },
+  { id: "p11", name: "Bùi Sơn Sơn", number: 11, role: "Opposite", photo: "" }
 ];
 
 const COLORS = ["orange", "blue", "teal", "purple", "red", "gold"];
@@ -151,22 +151,20 @@ function getSelectedLineup() {
   return lineups.find(item => item.id === selectedLineupId) || lineups[0];
 }
 
-function positionsAt(lineup, rotation = lineup.rotation) {
-  const positions = {};
 
-  lineup.players.slice(0, 6).forEach((player, index) => {
-    positions[index + 1] = player;
-  });
 
-  for (let index = 0; index < rotation; index++) {
-    const previous = { ...positions };
+  // Xoay theo chiều kim đồng hồ:
+  // 2 → 1, 3 → 2, 4 → 3,
+  // 5 → 4, 6 → 5, 1 → 6
+  for (let i = 0; i < ((rotation % 6) + 6) % 6; i++) {
+    const old = { ...positions };
 
-    positions[1] = previous[2];
-    positions[2] = previous[3];
-    positions[3] = previous[4];
-    positions[4] = previous[5];
-    positions[5] = previous[6];
-    positions[6] = previous[1];
+    positions[1] = old[2];
+    positions[2] = old[3];
+    positions[3] = old[4];
+    positions[4] = old[5];
+    positions[5] = old[6];
+    positions[6] = old[1];
   }
 
   return positions;
