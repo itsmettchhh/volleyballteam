@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#07111f">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
   <title>Volley Planner — Đội hình bóng chuyền</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,35 +13,38 @@
     <header class="topbar">
       <a class="brand" href="#">
         <span class="brand-icon">V</span>
-        <span>VOLLEY<span class="brand-light"> PLANNER</span></span>
+        <span>VOLLEY <span class="brand-light">PLANNER</span></span>
       </a>
       <div class="topbar-right">
         <span class="status-dot"></span>
-        <span>LINEUP STUDIO</span>
+        LINEUP STUDIO
       </div>
     </header>
 
     <main class="main">
       <section class="hero">
-        <div>
-          <div class="eyebrow">VOLLEYBALL ROTATION SYSTEM</div>
-          <h1>Đội hình <span>của bạn.</span></h1>
-          <p>Quản lý nhiều đội hình, theo dõi vị trí và xoay vòng cầu thủ trên cùng một màn hình.</p>
-        </div>
+        <div class="eyebrow">VOLLEYBALL ROTATION SYSTEM</div>
+        <h1>Đội hình <span>của bạn.</span></h1>
+        <p>Quản lý đội hình, sắp xếp vị trí và theo dõi vòng xoay cầu thủ.</p>
       </section>
 
       <section class="control-grid">
-        <div class="control-card">
+        <div class="control-card match-control">
           <label for="matchName">TÊN GIẢI ĐẤU</label>
-          <input id="matchName" type="text" value="Friendly Match">
+          <input id="matchName" type="text" value="Friendly Match"
+                 placeholder="Nhập tên giải đấu">
         </div>
         <div class="control-card">
           <label>QUẢN LÝ ĐỘI HÌNH</label>
-          <button id="addLineupBtn" class="primary-btn" type="button">＋ Thêm đội hình</button>
+          <button id="addLineupBtn" class="primary-btn" type="button">
+            ＋ Thêm đội hình
+          </button>
         </div>
         <div class="control-card">
           <label>THAO TÁC</label>
-          <button id="saveBtn" class="secondary-btn" type="button">Lưu dữ liệu</button>
+          <button id="saveBtn" class="secondary-btn" type="button">
+            Lưu dữ liệu
+          </button>
         </div>
       </section>
 
@@ -52,29 +56,35 @@
           </div>
           <span id="lineupCount" class="count-badge">3 ĐỘI HÌNH</span>
         </div>
-
-        <div id="lineupsGrid" class="lineups-grid">
-          <!-- JavaScript sẽ tự tạo các sân và đội hình tại đây -->
-        </div>
+        <div id="lineupsGrid" class="lineups-grid"></div>
       </section>
 
-      <section class="players-card">
+      <section class="players-card panel">
         <div class="section-heading">
           <div>
             <div class="eyebrow">ROSTER MANAGEMENT</div>
             <h2>Danh sách cầu thủ</h2>
+            <p id="selectedLineupLabel" class="section-note">
+              Chọn đội hình để quản lý cầu thủ.
+            </p>
           </div>
-          <button id="addBtn" class="primary-btn" type="button">＋ Thêm cầu thủ</button>
+          <button id="addBtn" class="primary-btn" type="button">
+            ＋ Thêm cầu thủ
+          </button>
         </div>
-        <p class="helper-text">Chọn đội hình để quản lý cầu thủ tương ứng.</p>
+        <div class="roster-tip">
+          Mẹo: Kéo tên cầu thủ lên một vị trí trên sân để thay người.
+          Kéo một vị trí sang vị trí khác để đổi chỗ.
+        </div>
         <div id="playerList" class="player-list"></div>
       </section>
 
-      <section class="history-panel">
+      <section class="history-panel panel">
         <div class="section-heading">
           <div>
             <div class="eyebrow">ROTATION OVERVIEW</div>
             <h2>Sơ đồ xoay vòng</h2>
+            <p id="rotationMapLabel" class="section-note"></p>
           </div>
         </div>
         <div id="rotationMap" class="rotation-map"></div>
@@ -86,13 +96,15 @@
 
   <div id="playerModal" class="modal hidden">
     <div class="modal-box">
-      <button id="closeModal" class="modal-close" type="button" aria-label="Đóng">×</button>
+      <button id="closeModal" class="modal-close" type="button"
+              aria-label="Đóng">×</button>
       <div class="eyebrow">PLAYER PROFILE</div>
       <h2 id="modalTitle">Thêm cầu thủ</h2>
 
       <form id="playerForm">
         <label for="pName">Họ và tên</label>
-        <input id="pName" type="text" required placeholder="Nhập tên cầu thủ">
+        <input id="pName" type="text" required
+               placeholder="Nhập họ và tên cầu thủ">
 
         <label for="pNumber">Số áo</label>
         <input id="pNumber" type="number" min="0" max="99" value="1" required>
@@ -109,22 +121,26 @@
 
         <label for="pPhoto">Ảnh cầu thủ (không bắt buộc)</label>
         <input id="pPhoto" type="file" accept="image/*">
+        <p id="photoHint" class="section-note">
+          Nếu không chọn ảnh mới, ảnh cũ sẽ được giữ nguyên khi chỉnh sửa.
+        </p>
 
-        <button id="playerSubmit" class="primary-btn full" type="submit">Lưu cầu thủ</button>
+        <button id="playerSubmit" class="primary-btn full" type="submit">
+          Lưu cầu thủ
+        </button>
       </form>
     </div>
   </div>
 
-  <div id="toast" class="toast" role="status"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <div class="presentation-controls" id="presentationControls">
-    <button id="presPrev" type="button">←</button>
-    <span id="presLabel">ROTATION 1</span>
-    <button id="presNext" type="button">→</button>
-    <button id="presClose" type="button">× Thoát</button>
+    <button id="presPrev" type="button" aria-label="Vòng trước">←</button>
+    <span id="presLabel">VÒNG 1 / 6</span>
+    <button id="presNext" type="button" aria-label="Vòng sau">→</button>
+    <button id="presClose" type="button">× Thoát trình chiếu</button>
   </div>
 
   <script src="app.js"></script>
 </body>
 </html>
-```
